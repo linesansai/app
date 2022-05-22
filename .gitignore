@@ -1,0 +1,9 @@
+.stack-work/
+*~
+*.local
+*.pem
+*.csr
+auth-key
+*.cabal
+*.lock
+.vscode/

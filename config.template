@@ -1,0 +1,17 @@
+{
+    "authKeyPath": "path/to/jwk",
+    "appUrl" : "https://127.0.0.1:8080",
+    "dbConfig": {
+        "host": "127.0.0.1",
+        "name": "app-db",
+        "user": "app-user",
+        "pass": "app-password",
+        "port": "5432"
+    },
+    "smtpConfig": {
+        "smtpHostName": "smtp.yandex.ru",
+        "smtpUserName": "smtpUserName",
+        "smtpPassword": "smtpPassword"
+    },
+    "serviceEmail" : "servic@email.com"
+}
