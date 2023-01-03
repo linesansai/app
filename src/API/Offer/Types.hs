@@ -8,20 +8,27 @@ import Core.Types.Auth
 import Core.Types.GeoPosition (GeoPosition)
 import Core.Utils (tshow)
 import Data.Aeson
+import Data.OpenApi (ToSchema)
 import qualified Data.Text as T
 import Database.Offer (OfferId, OfferStatus)
 import Database.User (UserId)
 import Servant.API
 import Servant.API.Generic
-import Data.OpenApi (ToSchema)
 
 type OfferAPI =
   "offers"
-    :> (GetMyOffers :<|> GetOpenOffers :<|> CreateOffer :<|> TakeOffer :<|> ConfirmOffer)
+    :> ( GetMyOffers
+           :<|> GetOpenOffers
+           :<|> CreateOffer
+           :<|> TakeOffer
+           :<|> ConfirmOffer
+           :<|> CancelOffer
+           :<|> ClearExecutorOffer
+       )
 
 type GetMyOffers =
-  "my" :>
-    (GetOwnedOffers :<|> GetTakenOffers )
+  "my"
+    :> (GetOwnedOffers :<|> GetTakenOffers)
 
 type GetOwnedOffers =
   "owned"
@@ -44,12 +51,13 @@ data Offer = Offer
     userId :: UserId,
     geoPosition :: GeoPosition,
     status :: OfferStatus,
+    reward :: Int,
     executor :: Maybe UserId
   }
   deriving (Generic, FromJSON, ToJSON, ToSchema)
 
 type CreateOffer =
-  ProtectedWithJWT 
+  ProtectedWithJWT
     :> ReqBody '[JSON] CreateOfferRequest
     :> Post '[JSON] (WebResponse CreateOfferError Offer)
 
@@ -63,7 +71,7 @@ data CreateOfferRequest = CreateOfferRequest
 
 data CreateOfferError
   = BadGeoPosition
-    | BalanceIsNotEnough
+  | BalanceIsNotEnough
   deriving (Eq, Show)
 
 instance IsAPIError CreateOfferError where
@@ -72,11 +80,11 @@ instance IsAPIError CreateOfferError where
     BalanceIsNotEnough -> ("BalanceIsNotEnough", "")
 
 type TakeOffer =
-  "take" :> Capture "offerId" OfferId :> ProtectedWithJWT 
+  "take" :> Capture "offerId" OfferId :> ProtectedWithJWT
     :> Put '[JSON] (WebResponse TakeOfferError ())
 
 data TakeOfferError = OfferNotFound | OfferIsAlreadyTaken | YouCanNotTakeOwnOffer
-    deriving (Eq, Show)
+  deriving (Eq, Show)
 
 instance IsAPIError TakeOfferError where
   toAPIError = \case
@@ -85,5 +93,13 @@ instance IsAPIError TakeOfferError where
     YouCanNotTakeOwnOffer -> ("YouCanNotTakeOwnOffer", "")
 
 type ConfirmOffer =
-  "confirm" :> Capture "offerId" OfferId :> ProtectedWithJWT 
+  "confirm" :> Capture "offerId" OfferId :> ProtectedWithJWT
+    :> Put '[JSON] (WebResponse TakeOfferError ())
+
+type ClearExecutorOffer =
+  "clear-executor" :> Capture "offerId" OfferId :> ProtectedWithJWT
+    :> Put '[JSON] (WebResponse TakeOfferError ())
+
+type CancelOffer =
+  "cancel" :> Capture "offerId" OfferId :> ProtectedWithJWT
     :> Put '[JSON] (WebResponse TakeOfferError ())
