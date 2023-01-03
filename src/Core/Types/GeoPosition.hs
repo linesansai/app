@@ -16,5 +16,5 @@ validateGeoPosition :: GeoPosition -> Either ValidateGeoPositionError GeoPositio
 validateGeoPosition geoPos@GeoPosition {..} = 
     if 
         |  (- 180) > longitude || longitude > 180 -> Left BadLongitude
-        |  (- 90) > longitude || latitude > 90 -> Left BadLatitude
+        |  (- 90) > latitude || latitude > 90 -> Left BadLatitude
         | otherwise -> Right geoPos
