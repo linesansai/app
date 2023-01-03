@@ -11,6 +11,8 @@ import Servant
 import UnliftIO (liftIO)
 import Gateways.Email
 import Data.Aeson (encode)
+import qualified Database.User as DB
+import Database.Esqueleto.Legacy (val, (=.))
 
 handlers :: MonadApp m => ServerT AuthAPI m
 handlers = requestCode :<|> confirmCode
@@ -32,6 +34,7 @@ requestCode RequestCodeRequest {..} = do
                 mailTo = userEmail
             }
             sendEmail mail
+            pure ()
 
 confirmCode :: MonadApp m => ConfirmCodeRequest -> m (WebResponse ConfirmCodeError ConfirmCodeResponse)
 confirmCode ConfirmCodeRequest {..} = do 
@@ -42,4 +45,5 @@ confirmCode ConfirmCodeRequest {..} = do
         | otherwise -> do
             token <- genJWTToken userId >>= maybe (error "Unable to create JWT token") pure
             deleteAuthSession authSessionId
+            runDB $ DB.updateUser userId [#isEmailConfirmed =. val True]
             pure $ successWith (ConfirmCodeResponse token)
