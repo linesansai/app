@@ -15,7 +15,7 @@ sendTelegramMsg ::
   Text ->
   m ()
 sendTelegramMsg msg = do
-  withAppHandle \AppHandle {..} -> tryAny $ do
+  res <- withAppHandle \AppHandle {..} -> tryAny $ do
     let C.TelegramConfig {..} = C.telegramConfig config
     let url = unpack $ "https://api.telegram.org/bot" <> telegramBotToken <> "/sendMessage"
     initReq <- liftIO $ HTTP.parseRequest url
@@ -29,4 +29,7 @@ sendTelegramMsg msg = do
             }
     liftIO $ HTTP.httpLbs req httpManager
     pure ()
+  case res of 
+    Left e -> liftIO $ print e
+    Right () -> pure ()
   pure ()
