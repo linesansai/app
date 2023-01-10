@@ -54,7 +54,7 @@ data CreateOffer = CreateOffer
     description :: T.Text,
     reward :: Int,
     geoPosition :: GeoPosition
-  }
+  } deriving (Show)
 
 createOffer :: CreateOffer -> SqlPersistM (Entity Offer)
 createOffer CreateOffer {..} = do 

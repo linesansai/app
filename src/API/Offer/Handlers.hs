@@ -20,6 +20,8 @@ import qualified Database.User as DB
 import Ext.Persistent (intToKey)
 import Servant (ServerT, type (:<|>) (..))
 import Servant.Auth.Server (AuthResult)
+import Core.Telegram (sendTelegramMsg)
+import Core.Utils (tshow)
 
 handlers :: MonadApp m => ServerT OfferAPI m
 handlers =
@@ -65,6 +67,8 @@ createOffer auth CreateOfferRequest {..} = withConfirmedEmail auth \userId -> do
                 reward
               }
       r <- runDB $ DB.createOffer createReq
+      sendTelegramMsg $ "User "<> tshow userId <> " created the offer: " <> tshow createReq
+
       pure $ successWith $ transformOffer r
 
 takeOffer :: MonadApp m => DB.OfferId -> AuthResult AuthenticatedUser -> m (WebResponse TakeOfferError ())
@@ -75,6 +79,7 @@ takeOffer offerId auth = withConfirmedEmail auth \userId -> do
       | userId == offerUserId -> pure $ failWith YouCanNotTakeOwnOffer
       | isNothing offerExecutor && offerStatus == DB.Open -> do
         runDB (DB.updateOffer offerId [#executor =. val (Just userId), #status =. val DB.Executing])
+        sendTelegramMsg $ "User "<> tshow userId <> " took the offer: " <> tshow offerId
         pure emptySuccess
     _ -> pure $ failWith OfferIsAlreadyTaken
 
@@ -82,10 +87,12 @@ confirmOffer :: MonadApp m => DB.OfferId -> AuthResult AuthenticatedUser -> m (W
 confirmOffer offerId auth = withConfirmedEmail auth \userId -> do
   runDB (DB.loadOfferById offerId) >>= \case
     Nothing -> pure $ failWith OfferNotFound
-    Just (Entity _ offer@DB.Offer {..}) | offerUserId == userId && offerStatus == DB.Executing -> runDB do
-      executor <- join <$> DB.loadUserById `traverse` offerExecutor
-      DB.updateOffer offerId [#confirmedByCustomer =. val True, #status =. val DB.Done]
-      updateBalances offer
+    Just (Entity _ offer@DB.Offer {..}) | offerUserId == userId && offerStatus == DB.Executing -> do
+      runDB do
+        executor <- join <$> DB.loadUserById `traverse` offerExecutor
+        DB.updateOffer offerId [#confirmedByCustomer =. val True, #status =. val DB.Done]
+        updateBalances offer
+      sendTelegramMsg $ "User "<> tshow userId <> " confirmed the offer: " <> tshow offerId
       pure emptySuccess
     _ -> pure $ failWith OfferNotFound
   where
@@ -107,6 +114,7 @@ clearExecutorOffer offerId auth = withConfirmedEmail auth \userId -> do
     Just (Entity _ DB.Offer {..})
       | offerUserId == userId || offerExecutor == Just userId -> do
         runDB (DB.updateOffer offerId [#executor =. val Nothing, #status =. val DB.Open])
+        sendTelegramMsg $ "User "<> tshow userId <> " rejected the offer: " <> tshow offerId
         pure emptySuccess
     _ -> pure $ failWith OfferNotFound
 
@@ -114,8 +122,9 @@ cancelOffer :: MonadApp m => DB.OfferId -> AuthResult AuthenticatedUser -> m (We
 cancelOffer offerId auth = withConfirmedEmail auth \userId -> do
   runDB (DB.loadOfferById offerId) >>= \case
     Nothing -> pure $ failWith OfferNotFound
-    Just (Entity _ offer@DB.Offer {..}) | offerUserId == userId -> runDB do
-      DB.updateOffer offerId [#status =. val DB.Closed]
+    Just (Entity _ offer@DB.Offer {..}) | offerUserId == userId ->  do
+      runDB $ DB.updateOffer offerId [#status =. val DB.Closed]
+      sendTelegramMsg $ "User "<> tshow userId <> " canceled the offer: " <> tshow offerId
       pure emptySuccess
     _ -> pure $ failWith OfferNotFound
 

@@ -49,6 +49,7 @@ dependencies:
 - insert-ordered-containers
 - lens
 - warp-tls
+- http-client
 
 
 library:

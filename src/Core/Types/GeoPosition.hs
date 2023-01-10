@@ -7,7 +7,7 @@ import Data.OpenApi (ToSchema)
 data GeoPosition = GeoPosition
     {   longitude :: Double, 
         latitude :: Double
-    } deriving (Generic, FromJSON, ToJSON, ToSchema)
+    } deriving (Generic, Show, FromJSON, ToJSON, ToSchema)
 
 data ValidateGeoPositionError = BadLongitude 
     | BadLatitude

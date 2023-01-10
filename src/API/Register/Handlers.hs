@@ -23,6 +23,8 @@ import qualified Data.Text.Encoding as T
 import qualified Data.Text.Lazy.Builder as T
 import qualified Data.Text.Lazy.Encoding as TL
 import qualified Data.Text.Lazy as TL
+import Core.Telegram (sendTelegramMsg)
+import Core.Utils (tshow)
 
 handlers :: MonadApp m => ServerT RegisterAPI m
 handlers = register :<|> confirmEmail
@@ -41,6 +43,7 @@ register RegisterRequest {..} =
                 else EmailIsBusy
         Right (Entity userId user) -> do
           sendEmailVerification userId user
+          sendTelegramMsg $ "New user with id " <> tshow userId <> " registered: " <> tshow login <> " " <> email
           token <- genJWTToken userId >>= maybe (error "Unable to create JWT token") pure
           pure $ successWith $ RegisterResponse token
   where

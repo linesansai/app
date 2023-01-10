@@ -22,11 +22,12 @@ getMe :: MonadApp m => AuthResult AuthenticatedUser -> m (WebResponse GetUserErr
 getMe auth = withUserAuth auth \userId -> do
   runDB (DB.loadUserById userId) >>= \case
     Nothing -> pure $ failWith UserNotFound
-    Just (Entity _ DB.User {..}) ->
+    Just (Entity userId DB.User {..}) ->
       pure $
         successWith
           User
-            { name = userName,
+            { id = userId,
+              name = userName,
               login = Just userLogin,
               email = Just userEmail,
               phoneNumber = userPhoneNumber,
@@ -41,7 +42,8 @@ getUser userId auth  = withUserAuth auth \_ -> do
       pure $
         successWith
           User
-            { name = userName,
+            { id = userId,
+              name = userName,
               login = Nothing,
               email = Nothing,
               phoneNumber = userPhoneNumber,

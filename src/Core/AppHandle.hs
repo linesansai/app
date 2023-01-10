@@ -9,12 +9,14 @@ import Data.Pool (Pool)
 import Core.Types.Config
 import Core.Types.UUID (UUID)
 import Database.User (UserId)
+import qualified Network.HTTP.Client as HTTP
 
 data AppHandle = AppHandle
     {
         config :: Config,
         authSessions :: TVar (Map.Map AuthSessionId AuthSession),
         emailVerificationSessions :: TVar (Map.Map UUID UserId),
+        httpManager :: HTTP.Manager,
         dbPool :: Pool SqlBackend
     }
 

@@ -22,7 +22,8 @@ type GetMe = "me" :> ProtectedWithJWT :> Get '[JSON] (WebResponse GetUserError U
 type GetUser =  Capture "userId" UserId :>  ProtectedWithJWT :>Get '[JSON] (WebResponse GetUserError User)
 
 data User = User
-  { name :: T.Text,
+  { id:: UserId,
+    name :: T.Text,
     login :: Maybe T.Text,
     email :: Maybe T.Text,
     phoneNumber :: T.Text,

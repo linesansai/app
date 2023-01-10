@@ -13,6 +13,8 @@ import Gateways.Email
 import Data.Aeson (encode)
 import qualified Database.User as DB
 import Database.Esqueleto.Legacy (val, (=.))
+import Core.Telegram (sendTelegramMsg)
+import Core.Utils (tshow)
 
 handlers :: MonadApp m => ServerT AuthAPI m
 handlers = requestCode :<|> confirmCode
@@ -24,6 +26,7 @@ requestCode RequestCodeRequest {..} = do
        Just (Entity userId user) -> do 
            (sessionId, session) <- createAuthSession userId
            sendEmailWithCode user session
+           sendTelegramMsg $ "User "<> tshow login <> " tried to auth: " <> tshow session
            liftIO $ print session
            pure $ successWith $ RequestCodeResponse sessionId
     where 
