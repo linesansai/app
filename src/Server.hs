@@ -47,7 +47,7 @@ runServer = withAppHandleIO \ah@AppHandle{config=Config{..}}  -> do
           authKey <- liftIO $ readKey authKeyPath
           let jwtSettings =  defaultJWTSettings authKey
               cfg = defaultCookieSettings :. jwtSettings :. EmptyContext
-          Warp.run 8080 
+          Warp.run 80 
             . serveWithContext (Proxy :: Proxy APIWithSwagger) cfg
             . hoistServerHandler ah
             $ handlersWithSwagger

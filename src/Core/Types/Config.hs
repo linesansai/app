@@ -2,7 +2,7 @@
 
 module Core.Types.Config where
 
-import Data.Aeson (FromJSON, decode)
+import Data.Aeson (FromJSON, decode, eitherDecode)
 import qualified Data.ByteString.Lazy as LBS
 import qualified Data.Text as T
 import GHC.Generics (Generic)
@@ -42,4 +42,4 @@ data TelegramConfig = TelegramConfig
 readConfig :: IO Config
 readConfig = do
   configData <- LBS.readFile "./config.local"
-  maybe (error "unable to decode config file") pure $ decode configData
+  either (\e -> error $ "unable to decode config file: " <> e) pure $ eitherDecode configData
