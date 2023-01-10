@@ -13,6 +13,7 @@ import Database.Persist.Sql
 import GHC.Conc (newTVar, newTVarIO)
 import qualified Network.HTTP.Client as HTTP
 import UnliftIO (MonadUnliftIO, bracket)
+import qualified Network.HTTP.Client.TLS as HTTP
 
 type MonadApp m = (MonadReader AppHandle m, MonadUnliftIO m)
 
@@ -23,7 +24,7 @@ withAppHandleIO action = do
   config <- readConfig
   authSessions <- newTVarIO mempty
   emailVerificationSessions <- newTVarIO mempty
-  httpManager <- HTTP.newManager HTTP.defaultManagerSettings
+  httpManager <- HTTP.newTlsManagerWith $ HTTP.tlsManagerSettings
   withLoggedDbPool config \dbPool -> do
     let ah =
           AppHandle

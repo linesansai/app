@@ -50,6 +50,7 @@ dependencies:
 - lens
 - warp-tls
 - http-client
+- http-client-tls
 
 
 library:
